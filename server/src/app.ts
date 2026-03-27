@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import { profileMiddleware } from "./middleware/profile.js";
 import { errorHandler, AppError } from "./middleware/error-handler.js";
+import { ProfileService } from "./features/profiles/service.js";
+import { createProfileRoutes } from "./features/profiles/routes.js";
 
 interface AppOptions {
   dataDir: string;
@@ -16,6 +18,10 @@ export function createApp(options: AppOptions): express.Express {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", version: "0.0.1", uptime: process.uptime() });
   });
+
+  // Profile management — no X-Profile-Id required
+  const profileService = new ProfileService(options.dataDir);
+  app.use("/api/profiles", createProfileRoutes(profileService));
 
   // All /api routes below require profile
   const profileRouter = express.Router();
