@@ -16,30 +16,36 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
 
   return (
     <div
-      className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-sm ${
-        isActive ? "bg-zinc-800 text-zinc-100" : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
-      }`}
+      className="group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm transition"
+      style={{
+        background: isActive ? "rgba(217,119,87,0.12)" : "transparent",
+        color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
+      }}
       onClick={() => navigate(`/chat/${conversation.id}`)}
+      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(0,0,0,0.04)"; }}
+      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
     >
-      {conversation.starred && <span className="text-yellow-500 text-xs">*</span>}
+      {conversation.starred && <span className="text-amber-500 text-xs">★</span>}
       <span className="truncate flex-1">{conversation.title}</span>
       <div className="relative">
         <button
-          className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 text-xs px-1"
+          className="opacity-0 group-hover:opacity-100 text-xs px-1 transition"
+          style={{ color: "var(--color-text-tertiary)" }}
           onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
         >
-          ...
+          ···
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-6 bg-zinc-800 border border-zinc-700 rounded-lg py-1 z-50 min-w-32 shadow-lg">
+          <div className="absolute right-0 top-6 bg-white border rounded-lg py-1 z-50 min-w-32 shadow-lg" style={{ borderColor: "var(--color-border)" }}>
             <button
-              className="w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-700"
+              className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50"
+              style={{ color: "var(--color-text)" }}
               onClick={(e) => { e.stopPropagation(); updateConversation(conversation.id, { starred: !conversation.starred }); setShowMenu(false); }}
             >
               {conversation.starred ? "Unstar" : "Star"}
             </button>
             <button
-              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-zinc-700"
+              className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 text-red-500"
               onClick={(e) => { e.stopPropagation(); deleteConversation(conversation.id); setShowMenu(false); }}
             >
               Delete

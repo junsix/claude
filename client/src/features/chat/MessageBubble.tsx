@@ -7,51 +7,48 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message }: MessageBubbleProps) {
-  const [showActions, setShowActions] = useState(false);
+  const [showCopy, setShowCopy] = useState(false);
   const isUser = message.role === "user";
   const textContent = message.content
     .filter((b) => b.type === "text")
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("\n");
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(textContent);
-  };
-
   return (
     <div
-      className={`group relative flex gap-4 py-5 ${isUser ? "flex-row-reverse" : ""}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      className={`group relative flex gap-3 py-4 ${isUser ? "flex-row-reverse" : ""}`}
+      onMouseEnter={() => setShowCopy(true)}
+      onMouseLeave={() => setShowCopy(false)}
     >
       {/* Avatar */}
-      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 mt-1 ${
-        isUser ? "bg-zinc-700 text-zinc-300" : "bg-gradient-to-br from-orange-500 to-amber-600 text-white"
-      }`}>
-        {isUser ? "U" : "C"}
-      </div>
+      {!isUser && (
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 mt-0.5"
+          style={{ background: "var(--color-accent)" }}>
+          C
+        </div>
+      )}
 
       {/* Content */}
       <div className={`flex-1 min-w-0 ${isUser ? "flex justify-end" : ""}`}>
         <div className={isUser
-          ? "inline-block bg-zinc-800/80 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]"
+          ? "inline-block rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%]"
           : "max-w-none"
-        }>
+        } style={isUser ? { background: "var(--color-user-bubble)" } : {}}>
           {isUser ? (
-            <p className="text-sm whitespace-pre-wrap text-zinc-100 leading-relaxed">{textContent}</p>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--color-text)" }}>{textContent}</p>
           ) : (
-            <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+            <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-headings:font-semibold prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-code:text-rose-600 prose-code:bg-gray-50 prose-code:px-1 prose-code:rounded">
               <MarkdownRenderer content={textContent} />
             </div>
           )}
         </div>
 
-        {/* Hover actions */}
-        {showActions && (
-          <div className={`flex items-center gap-1 mt-1.5 ${isUser ? "justify-end" : ""}`}>
+        {showCopy && (
+          <div className={`flex mt-1 ${isUser ? "justify-end" : ""}`}>
             <button
-              className="text-[10px] text-zinc-600 hover:text-zinc-400 bg-zinc-800/50 hover:bg-zinc-800 px-2 py-0.5 rounded transition"
-              onClick={handleCopy}
+              className="text-[10px] px-2 py-0.5 rounded transition"
+              style={{ color: "var(--color-text-tertiary)", background: "var(--color-border-light)" }}
+              onClick={() => navigator.clipboard.writeText(textContent)}
             >
               Copy
             </button>

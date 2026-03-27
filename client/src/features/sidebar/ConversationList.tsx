@@ -6,23 +6,19 @@ interface ConversationListProps {
 }
 
 function isToday(dateStr: string): boolean {
-  const d = new Date(dateStr);
-  const now = new Date();
-  return d.toDateString() === now.toDateString();
+  return new Date(dateStr).toDateString() === new Date().toDateString();
 }
 
 function isYesterday(dateStr: string): boolean {
-  const d = new Date(dateStr);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return d.toDateString() === yesterday.toDateString();
+  return new Date(dateStr).toDateString() === yesterday.toDateString();
 }
 
 function isWithinDays(dateStr: string, days: number): boolean {
-  const d = new Date(dateStr);
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  return d >= cutoff;
+  return new Date(dateStr) >= cutoff;
 }
 
 export function ConversationList({ conversations }: ConversationListProps) {
@@ -43,17 +39,21 @@ export function ConversationList({ conversations }: ConversationListProps) {
   ].filter((s) => s.items.length > 0);
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-3">
+    <div className="flex-1 overflow-y-auto px-2 space-y-3">
       {sections.map((section) => (
         <div key={section.label}>
-          <div className="text-xs text-zinc-600 font-medium px-2 mb-1">{section.label}</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide px-2 mb-1" style={{ color: "var(--color-text-tertiary)" }}>
+            {section.label}
+          </div>
           {section.items.map((conv) => (
             <ConversationItem key={conv.id} conversation={conv} />
           ))}
         </div>
       ))}
       {conversations.length === 0 && (
-        <div className="text-center text-zinc-600 text-sm py-8">No conversations yet</div>
+        <div className="text-center text-sm py-8" style={{ color: "var(--color-text-tertiary)" }}>
+          No conversations yet
+        </div>
       )}
     </div>
   );

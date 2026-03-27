@@ -3,18 +3,11 @@ import { useChatStore } from "../chat/store.js";
 export function StatusBar() {
   const { meta } = useChatStore();
   const usage = meta?.usage;
+  if (!usage || usage.messageCount === 0) return null;
 
   return (
-    <footer className="h-7 border-t border-zinc-800 flex items-center px-4 text-xs text-zinc-500 gap-4 shrink-0">
-      {usage && usage.messageCount > 0 ? (
-        <>
-          <span>Tokens: {usage.totalInputTokens.toLocaleString()} in / {usage.totalOutputTokens.toLocaleString()} out</span>
-          <span>Cost: ${usage.totalCostUsd.toFixed(4)}</span>
-          <span>Messages: {usage.messageCount}</span>
-        </>
-      ) : (
-        <span>Ready</span>
-      )}
-    </footer>
+    <div className="text-center py-1.5 text-[10px]" style={{ color: "var(--color-text-tertiary)" }}>
+      {usage.totalInputTokens.toLocaleString()} in / {usage.totalOutputTokens.toLocaleString()} out · ${usage.totalCostUsd.toFixed(4)}
+    </div>
   );
 }

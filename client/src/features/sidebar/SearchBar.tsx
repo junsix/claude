@@ -7,17 +7,23 @@ export function SearchBar() {
     <div className="relative">
       <input
         type="text"
-        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-zinc-500"
+        className="w-full rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 border"
+        style={{
+          background: "white",
+          borderColor: "var(--color-border)",
+          color: "var(--color-text)",
+        }}
         placeholder="Search..."
         value={searchQuery}
         onChange={(e) => search(e.target.value)}
       />
       {searchQuery && (
         <button
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
+          style={{ color: "var(--color-text-secondary)" }}
           onClick={clearSearch}
         >
-          x
+          ✕
         </button>
       )}
     </div>
