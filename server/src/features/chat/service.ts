@@ -123,6 +123,17 @@ export class ChatService {
       meta.usage.totalOutputTokens += usage.outputTokens;
       meta.usage.totalCostUsd += usage.costUsd;
       meta.usage.messageCount += 2;
+
+      // Auto-generate title on first exchange
+      if (meta.usage.messageCount === 2 && meta.title === "New Conversation") {
+        const { generateTitle } = await import("./title-generator.js");
+        const titleMsgs = [
+          { role: "user", text: textContent },
+          { role: "assistant", text: assistantText },
+        ];
+        meta.title = await generateTitle(titleMsgs);
+      }
+
       await this.convStorage.saveMeta(dataDir, conversationId, meta);
 
       yield { type: "assistant_done", messageId: assistantMsgId, artifactIds: [] };
