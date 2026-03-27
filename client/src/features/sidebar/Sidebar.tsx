@@ -23,22 +23,32 @@ export function Sidebar() {
   const displayedConversations = searchQuery ? searchResults : conversations;
 
   return (
-    <aside className="w-70 border-r border-zinc-800 flex flex-col h-full">
-      <div className="p-3 flex items-center justify-between border-b border-zinc-800">
-        <div className="text-sm font-semibold">Claude Copy</div>
+    <aside className="w-64 border-r border-zinc-800/50 flex flex-col h-full bg-zinc-950">
+      {/* Header */}
+      <div className="p-4 flex items-center justify-between">
+        <span className="text-sm font-semibold text-zinc-200">Claude Copy</span>
         <button
-          className="text-xs bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded"
+          className="w-8 h-8 flex items-center justify-center hover:bg-zinc-800 rounded-lg transition text-zinc-400 hover:text-zinc-200"
           onClick={handleNewChat}
+          title="New conversation"
         >
-          + New
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
         </button>
       </div>
-      <div className="p-2">
+
+      {/* Profile */}
+      <div className="px-4 pb-3">
         <ProfileSwitcher />
       </div>
-      <div className="px-2 pb-2">
+
+      {/* Search */}
+      <div className="px-3 pb-3">
         <SearchBar />
       </div>
+
+      {/* Conversation list */}
       <ConversationList conversations={displayedConversations} />
     </aside>
   );

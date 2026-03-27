@@ -13,8 +13,8 @@ export function MessageList() {
   }, [activePath.length]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {activePath.map((msg) => (
           <div key={msg.id}>
             <BranchNavigator messageId={msg.id} />
