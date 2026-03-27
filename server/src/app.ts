@@ -8,6 +8,8 @@ import { ConversationStorage } from "./features/chat/storage.js";
 import { ChatService } from "./features/chat/service.js";
 import { createChatRoutes } from "./features/chat/routes.js";
 import { ClaudeService } from "./llm/claude-service.js";
+import { ConversationManagementService } from "./features/conversations/service.js";
+import { createConversationRoutes } from "./features/conversations/routes.js";
 
 interface AppOptions {
   dataDir: string;
@@ -31,13 +33,10 @@ export function createApp(options: AppOptions): express.Express {
   const profileRouter = express.Router();
   profileRouter.use(profileMiddleware(options.dataDir));
 
-  // Placeholder — routes will be mounted here in later tasks
-  profileRouter.get("/conversations", (_req, res) => {
-    res.json({ data: [], nextCursor: null });
-  });
-
   const claudeService = new ClaudeService();
   const convStorage = new ConversationStorage();
+  const convManagement = new ConversationManagementService(convStorage);
+  profileRouter.use("/conversations", createConversationRoutes(convManagement));
   const chatService = new ChatService(convStorage, claudeService);
   profileRouter.use("/chat", createChatRoutes(chatService, convStorage, claudeService));
 
