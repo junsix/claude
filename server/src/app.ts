@@ -19,6 +19,9 @@ import { createArtifactRoutes } from "./features/artifacts/routes.js";
 import { FileStorage } from "./features/files/storage.js";
 import { FileService } from "./features/files/service.js";
 import { createFileRoutes } from "./features/files/routes.js";
+import { SettingsStorage } from "./features/settings/storage.js";
+import { SettingsService } from "./features/settings/service.js";
+import { createSettingsRoutes } from "./features/settings/routes.js";
 
 interface AppOptions {
   dataDir: string;
@@ -60,6 +63,10 @@ export function createApp(options: AppOptions): express.Express {
   const fileStorage = new FileStorage();
   const fileService = new FileService();
   profileRouter.use("/files", createFileRoutes(fileStorage, fileService, projectStorage));
+
+  const settingsStorage = new SettingsStorage();
+  const settingsService = new SettingsService(settingsStorage);
+  profileRouter.use("/settings", createSettingsRoutes(settingsService));
 
   app.use("/api", profileRouter);
 
