@@ -46,7 +46,6 @@ export class ChatService {
     // Build system prompt
     const systemPrompt = buildSystemPrompt(context);
 
-    // Determine if resume or start new
     const abortController = new AbortController();
     this.claudeService.setAbortController(conversationId, abortController);
 
@@ -56,70 +55,28 @@ export class ChatService {
       .join("\n");
 
     try {
-      // Find active session to resume
-      const activeSessionId = Object.entries(meta.sessions).find(
-        ([, info]) => info.branchTip === meta.activeBranchTip,
-      )?.[0];
-
-      const stream = activeSessionId
-        ? this.claudeService.resumeConversation({
-            prompt: textContent,
-            sessionId: activeSessionId,
-            model,
-            systemPrompt,
-            abortController,
-          })
-        : this.claudeService.startConversation({
-            prompt: textContent,
-            model,
-            systemPrompt,
-            abortController,
-          });
+      const stream = this.claudeService.streamConversation({
+        prompt: textContent,
+        model,
+        systemPrompt,
+        abortController,
+      });
 
       let assistantText = "";
-      let newSessionId = "";
       let usage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
 
-      let lastPartialLength = 0;
-
-      for await (const msg of stream) {
-        if (msg.session_id) newSessionId = msg.session_id;
-
-        // Handle partial/streaming messages — yields incremental text deltas
-        if (msg.type === "assistant" && msg.subtype === "partial") {
-          const textBlocks = msg.message.content.filter((b: { type: string }) => b.type === "text");
-          const fullText = textBlocks.map((b: { text: string }) => b.text).join("");
-          if (fullText.length > lastPartialLength) {
-            const delta = fullText.slice(lastPartialLength);
-            lastPartialLength = fullText.length;
-            yield { type: "assistant_chunk", text: delta };
-          }
-          continue;
+      for await (const event of stream) {
+        if (event.type === "text_delta" && event.text) {
+          assistantText += event.text;
+          yield { type: "assistant_chunk", text: event.text };
         }
 
-        // Handle complete assistant message
-        if (msg.type === "assistant") {
-          const textBlocks = msg.message.content.filter((b: { type: string }) => b.type === "text");
-          const fullText = textBlocks.map((b: { text: string }) => b.text).join("");
-          // If we got partials, only emit remaining delta; otherwise emit full text
-          if (fullText.length > lastPartialLength) {
-            const delta = fullText.slice(lastPartialLength);
-            yield { type: "assistant_chunk", text: delta };
-          }
-          assistantText = fullText;
-          if (msg.message.usage) {
-            usage.inputTokens += msg.message.usage.input_tokens ?? 0;
-            usage.outputTokens += msg.message.usage.output_tokens ?? 0;
-          }
-        }
-
-        if (msg.type === "result") {
-          usage.costUsd = msg.total_cost_usd ?? 0;
-          // If no partials were received, use result text as fallback
-          if (!assistantText && msg.result) {
-            assistantText = msg.result;
-            yield { type: "assistant_chunk", text: assistantText };
-          }
+        if (event.type === "message_complete") {
+          // Use the full text from SDK (more reliable than concatenated deltas)
+          if (event.fullText) assistantText = event.fullText;
+          usage.inputTokens = event.usage?.inputTokens ?? 0;
+          usage.outputTokens = event.usage?.outputTokens ?? 0;
+          usage.costUsd = event.costUsd ?? 0;
         }
       }
 
@@ -137,10 +94,7 @@ export class ChatService {
       };
       await this.convStorage.addMessage(dataDir, conversationId, assistantMsg);
 
-      // Update session map
-      if (newSessionId) {
-        meta.sessions[newSessionId] = { branchTip: assistantMsgId, createdAt: new Date().toISOString() };
-      }
+      // Update meta
       meta.activeBranchTip = assistantMsgId;
       meta.usage.totalInputTokens += usage.inputTokens;
       meta.usage.totalOutputTokens += usage.outputTokens;
