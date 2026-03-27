@@ -10,6 +10,9 @@ import { createChatRoutes } from "./features/chat/routes.js";
 import { ClaudeService } from "./llm/claude-service.js";
 import { ConversationManagementService } from "./features/conversations/service.js";
 import { createConversationRoutes } from "./features/conversations/routes.js";
+import { ProjectStorage } from "./features/projects/storage.js";
+import { ProjectService } from "./features/projects/service.js";
+import { createProjectRoutes } from "./features/projects/routes.js";
 
 interface AppOptions {
   dataDir: string;
@@ -39,6 +42,10 @@ export function createApp(options: AppOptions): express.Express {
   profileRouter.use("/conversations", createConversationRoutes(convManagement));
   const chatService = new ChatService(convStorage, claudeService);
   profileRouter.use("/chat", createChatRoutes(chatService, convStorage, claudeService));
+
+  const projectStorage = new ProjectStorage();
+  const projectService = new ProjectService(projectStorage);
+  profileRouter.use("/projects", createProjectRoutes(projectService));
 
   app.use("/api", profileRouter);
 
