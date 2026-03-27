@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Message } from "@claude-copy/shared";
 import { MarkdownRenderer } from "./markdown-renderer.js";
+import { ThinkingBlock } from "./ThinkingBlock.js";
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,6 +13,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const textContent = message.content
     .filter((b) => b.type === "text")
     .map((b) => (b as { type: "text"; text: string }).text)
+    .join("\n");
+
+  const thinkingContent = message.content
+    .filter((b) => b.type === "thinking")
+    .map((b) => (b as { type: "thinking"; thinking: string }).thinking)
     .join("\n");
 
   return (
@@ -37,9 +43,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           {isUser ? (
             <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "var(--color-text)" }}>{textContent}</p>
           ) : (
-            <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-headings:font-semibold prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-code:text-rose-600 prose-code:bg-gray-50 prose-code:px-1 prose-code:rounded">
-              <MarkdownRenderer content={textContent} />
-            </div>
+            <>
+              {thinkingContent && <ThinkingBlock thinking={thinkingContent} />}
+              <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-headings:font-semibold prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-code:text-rose-600 prose-code:bg-gray-50 prose-code:px-1 prose-code:rounded">
+                <MarkdownRenderer content={textContent} />
+              </div>
+            </>
           )}
         </div>
 

@@ -65,15 +65,22 @@ export class ChatService {
       let assistantText = "";
       let usage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
 
+      let thinkingText = "";
+
       for await (const event of stream) {
+        if (event.type === "thinking" && event.text) {
+          thinkingText += event.text;
+          yield { type: "thinking", text: event.text };
+        }
+
         if (event.type === "text_delta" && event.text) {
           assistantText += event.text;
           yield { type: "assistant_chunk", text: event.text };
         }
 
         if (event.type === "message_complete") {
-          // Use the full text from SDK (more reliable than concatenated deltas)
           if (event.fullText) assistantText = event.fullText;
+          if (event.thinkingText) thinkingText = event.thinkingText;
           usage.inputTokens = event.usage?.inputTokens ?? 0;
           usage.outputTokens = event.usage?.outputTokens ?? 0;
           usage.costUsd = event.costUsd ?? 0;
@@ -82,11 +89,17 @@ export class ChatService {
 
       // Save assistant message
       const assistantMsgId = `msg_${uuid().slice(0, 8)}` as MessageId;
+      const assistantContent: ContentBlock[] = [];
+      if (thinkingText) {
+        assistantContent.push({ type: "thinking", thinking: thinkingText });
+      }
+      assistantContent.push({ type: "text", text: assistantText });
+
       const assistantMsg: Message = {
         id: assistantMsgId,
         parentId: userMsgId,
         role: "assistant",
-        content: [{ type: "text", text: assistantText }],
+        content: assistantContent,
         attachments: [],
         model,
         usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens },

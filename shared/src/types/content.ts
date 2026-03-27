@@ -1,5 +1,6 @@
 export type ContentBlock =
   | { type: "text"; text: string }
+  | { type: "thinking"; thinking: string }
   | { type: "image"; source: { type: "base64"; media_type: string; data: string } }
   | { type: "artifact_ref"; artifactId: string }
   | { type: "file_ref"; fileId: string; name: string }

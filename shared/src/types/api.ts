@@ -10,6 +10,7 @@ export interface ApiError {
 
 export type ChatSSEEvent =
   | { type: "user_saved"; messageId: string }
+  | { type: "thinking"; text: string }
   | { type: "assistant_chunk"; text: string }
   | { type: "assistant_done"; messageId: string; artifactIds: string[] }
   | { type: "done"; usage: { inputTokens: number; outputTokens: number; costUsd: number } }

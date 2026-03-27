@@ -7,12 +7,17 @@ interface ChatStore {
   messages: Message[];
   isStreaming: boolean;
   streamingText: string;
+  thinkingText: string;
+  isThinking: boolean;
   activeBranchTip: string;
 
   loadConversation: (id: string) => Promise<void>;
   setStreaming: (streaming: boolean) => void;
   appendStreamingText: (text: string) => void;
   clearStreamingText: () => void;
+  appendThinkingText: (text: string) => void;
+  setIsThinking: (thinking: boolean) => void;
+  clearThinking: () => void;
   addMessage: (msg: Message) => void;
   setActiveBranchTip: (tip: string) => void;
   updateMeta: (updates: Partial<ConversationMeta>) => void;
@@ -23,6 +28,8 @@ export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
   isStreaming: false,
   streamingText: "",
+  thinkingText: "",
+  isThinking: false,
   activeBranchTip: "",
 
   loadConversation: async (id: string) => {
@@ -33,6 +40,9 @@ export const useChatStore = create<ChatStore>((set) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   appendStreamingText: (text) => set((s) => ({ streamingText: s.streamingText + text })),
   clearStreamingText: () => set({ streamingText: "" }),
+  appendThinkingText: (text) => set((s) => ({ thinkingText: s.thinkingText + text, isThinking: true })),
+  setIsThinking: (thinking) => set({ isThinking: thinking }),
+  clearThinking: () => set({ thinkingText: "", isThinking: false }),
   addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
   setActiveBranchTip: (tip) => set({ activeBranchTip: tip }),
   updateMeta: (updates) => set((s) => ({ meta: s.meta ? { ...s.meta, ...updates } : null })),

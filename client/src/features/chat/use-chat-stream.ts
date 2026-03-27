@@ -6,7 +6,10 @@ import type { ContentBlock } from "@claude-copy/shared";
 
 export function useChatStream() {
   const abortRef = useRef<AbortController | null>(null);
-  const { meta, setStreaming, appendStreamingText, clearStreamingText, loadConversation } = useChatStore();
+  const {
+    meta, setStreaming, appendStreamingText, clearStreamingText,
+    appendThinkingText, setIsThinking, clearThinking, loadConversation,
+  } = useChatStore();
   const { activeProfile } = useProfileStore();
 
   const sendMessage = useCallback(
@@ -15,6 +18,7 @@ export function useChatStream() {
 
       setStreaming(true);
       clearStreamingText();
+      clearThinking();
 
       abortRef.current = startChatStream({
         conversationId: meta.id,
@@ -23,7 +27,11 @@ export function useChatStream() {
         model: meta.model,
         profileId: activeProfile.id,
         onEvent: (event) => {
+          if (event.type === "thinking") {
+            appendThinkingText((event as { type: "thinking"; text: string }).text);
+          }
           if (event.type === "assistant_chunk") {
+            setIsThinking(false);
             appendStreamingText(event.text);
           }
           if (event.type === "assistant_done" || event.type === "done") {
@@ -33,21 +41,24 @@ export function useChatStream() {
         onError: (err) => {
           console.error("Stream error:", err);
           setStreaming(false);
+          clearThinking();
         },
         onDone: () => {
           setStreaming(false);
           clearStreamingText();
+          clearThinking();
         },
       });
     },
-    [meta, activeProfile, setStreaming, appendStreamingText, clearStreamingText, loadConversation],
+    [meta, activeProfile, setStreaming, appendStreamingText, clearStreamingText, appendThinkingText, setIsThinking, clearThinking, loadConversation],
   );
 
   const abort = useCallback(() => {
     abortRef.current?.abort();
     setStreaming(false);
     clearStreamingText();
-  }, [setStreaming, clearStreamingText]);
+    clearThinking();
+  }, [setStreaming, clearStreamingText, clearThinking]);
 
   return { sendMessage, abort };
 }
