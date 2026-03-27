@@ -4,6 +4,10 @@ import { profileMiddleware } from "./middleware/profile.js";
 import { errorHandler, AppError } from "./middleware/error-handler.js";
 import { ProfileService } from "./features/profiles/service.js";
 import { createProfileRoutes } from "./features/profiles/routes.js";
+import { ConversationStorage } from "./features/chat/storage.js";
+import { ChatService } from "./features/chat/service.js";
+import { createChatRoutes } from "./features/chat/routes.js";
+import { ClaudeService } from "./llm/claude-service.js";
 
 interface AppOptions {
   dataDir: string;
@@ -31,6 +35,11 @@ export function createApp(options: AppOptions): express.Express {
   profileRouter.get("/conversations", (_req, res) => {
     res.json({ data: [], nextCursor: null });
   });
+
+  const claudeService = new ClaudeService();
+  const convStorage = new ConversationStorage();
+  const chatService = new ChatService(convStorage, claudeService);
+  profileRouter.use("/chat", createChatRoutes(chatService, convStorage, claudeService));
 
   app.use("/api", profileRouter);
 
