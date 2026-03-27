@@ -13,6 +13,9 @@ import { createConversationRoutes } from "./features/conversations/routes.js";
 import { ProjectStorage } from "./features/projects/storage.js";
 import { ProjectService } from "./features/projects/service.js";
 import { createProjectRoutes } from "./features/projects/routes.js";
+import { ArtifactStorage } from "./features/artifacts/storage.js";
+import { ArtifactService } from "./features/artifacts/service.js";
+import { createArtifactRoutes } from "./features/artifacts/routes.js";
 
 interface AppOptions {
   dataDir: string;
@@ -46,6 +49,10 @@ export function createApp(options: AppOptions): express.Express {
   const projectStorage = new ProjectStorage();
   const projectService = new ProjectService(projectStorage);
   profileRouter.use("/projects", createProjectRoutes(projectService));
+
+  const artifactStorage = new ArtifactStorage();
+  const artifactService = new ArtifactService(artifactStorage);
+  profileRouter.use("/artifacts", createArtifactRoutes(artifactService));
 
   app.use("/api", profileRouter);
 
