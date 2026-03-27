@@ -26,12 +26,14 @@ export class ConversationManagementService {
     return this.storage.createConversation(dataDir, params);
   }
 
-  async update(dataDir: string, convId: string, updates: Partial<Pick<ConversationMeta, "title" | "starred" | "projectId">>): Promise<ConversationMeta> {
+  async update(dataDir: string, convId: string, updates: Partial<Pick<ConversationMeta, "title" | "starred" | "projectId" | "model" | "style">>): Promise<ConversationMeta> {
     const meta = await this.storage.getMeta(dataDir, convId);
     if (!meta) throw new Error("Conversation not found");
     if (updates.title !== undefined) meta.title = updates.title;
     if (updates.starred !== undefined) meta.starred = updates.starred;
     if (updates.projectId !== undefined) meta.projectId = updates.projectId;
+    if (updates.model !== undefined) meta.model = updates.model;
+    if (updates.style !== undefined) meta.style = updates.style;
     await this.storage.saveMeta(dataDir, convId, meta);
     return meta;
   }
