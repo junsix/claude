@@ -40,6 +40,7 @@ export class ClaudeService {
         additionalDirectories: params.additionalDirectories,
         maxTurns: 1,
         abortController: ac,
+        includePartialMessages: true,
       },
     });
     for await (const msg of q) {
@@ -57,6 +58,7 @@ export class ClaudeService {
         systemPrompt: params.systemPrompt,
         maxTurns: 1,
         abortController: ac,
+        includePartialMessages: true,
       },
     });
     for await (const msg of q) {

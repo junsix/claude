@@ -15,6 +15,8 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
 
     try {
       // Load real profile context
@@ -44,6 +46,9 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
 
       for await (const event of stream) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
+        if (typeof (res as any).flush === "function") {
+          (res as any).flush();
+        }
       }
     } catch (err: unknown) {
       res.write(`data: ${JSON.stringify({ type: "error", code: "internal", message: (err as Error).message })}\n\n`);

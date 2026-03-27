@@ -80,15 +80,33 @@ export class ChatService {
       let newSessionId = "";
       let usage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
 
+      let lastPartialLength = 0;
+
       for await (const msg of stream) {
         if (msg.session_id) newSessionId = msg.session_id;
 
+        // Handle partial/streaming messages — yields incremental text deltas
+        if (msg.type === "assistant" && msg.subtype === "partial") {
+          const textBlocks = msg.message.content.filter((b: { type: string }) => b.type === "text");
+          const fullText = textBlocks.map((b: { text: string }) => b.text).join("");
+          if (fullText.length > lastPartialLength) {
+            const delta = fullText.slice(lastPartialLength);
+            lastPartialLength = fullText.length;
+            yield { type: "assistant_chunk", text: delta };
+          }
+          continue;
+        }
+
+        // Handle complete assistant message
         if (msg.type === "assistant") {
           const textBlocks = msg.message.content.filter((b: { type: string }) => b.type === "text");
-          for (const block of textBlocks) {
-            assistantText += (block as { text: string }).text;
-            yield { type: "assistant_chunk", text: (block as { text: string }).text };
+          const fullText = textBlocks.map((b: { text: string }) => b.text).join("");
+          // If we got partials, only emit remaining delta; otherwise emit full text
+          if (fullText.length > lastPartialLength) {
+            const delta = fullText.slice(lastPartialLength);
+            yield { type: "assistant_chunk", text: delta };
           }
+          assistantText = fullText;
           if (msg.message.usage) {
             usage.inputTokens += msg.message.usage.input_tokens ?? 0;
             usage.outputTokens += msg.message.usage.output_tokens ?? 0;
@@ -97,6 +115,11 @@ export class ChatService {
 
         if (msg.type === "result") {
           usage.costUsd = msg.total_cost_usd ?? 0;
+          // If no partials were received, use result text as fallback
+          if (!assistantText && msg.result) {
+            assistantText = msg.result;
+            yield { type: "assistant_chunk", text: assistantText };
+          }
         }
       }
 
