@@ -17,6 +17,16 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
     res.setHeader("Connection", "keep-alive");
 
     try {
+      // Load real profile context
+      const { ProfileService } = await import("../profiles/service.js");
+      const { SettingsStorage } = await import("../settings/storage.js");
+
+      const profileSvc = new ProfileService(req.dataDir.replace(/[/\\]profiles[/\\].*$/, ""));
+      const settingsStorage = new SettingsStorage();
+
+      const profile = await profileSvc.getProfile(req.profileId);
+      const memories = await settingsStorage.listMemories(req.dataDir);
+
       const stream = chatService.sendMessage(
         req.dataDir,
         conversationId,
@@ -24,12 +34,8 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
         body.parentId,
         body.model ?? "claude-sonnet-4-6",
         {
-          profile: {
-            id: req.profileId, name: "", avatar: "", role: "", expertise: [],
-            language: "en", globalInstructions: "",
-            defaults: { model: "claude-sonnet-4-6", style: "normal" },
-          },
-          memories: [],
+          profile: profile!,
+          memories: memories.filter(m => m.active),
           style: null,
           projectInstructions: null,
           knowledgeContext: null,
