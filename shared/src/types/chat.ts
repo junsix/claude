@@ -33,5 +33,6 @@ export interface Message {
   attachments: string[];
   model?: string;
   usage?: { inputTokens: number; outputTokens: number };
+  sdkMessageUuid?: string;
   createdAt: string;
 }

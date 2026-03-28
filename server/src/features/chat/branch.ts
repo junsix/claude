@@ -27,3 +27,28 @@ export function findSessionForBranchTip(meta: ConversationMeta, branchTip: Messa
   }
   return null;
 }
+
+export function findSessionContainingMessage(
+  meta: ConversationMeta,
+  messages: Message[],
+  messageId: MessageId,
+): { sessionId: string; branchTip: MessageId } | null {
+  for (const [sessionId, info] of Object.entries(meta.sessions)) {
+    const path = getActivePath(messages, info.branchTip);
+    if (path.some((m) => m.id === messageId)) {
+      return { sessionId, branchTip: info.branchTip };
+    }
+  }
+  return null;
+}
+
+export function getLastAssistantInPath(
+  messages: Message[],
+  leafId: MessageId,
+): Message | null {
+  const path = getActivePath(messages, leafId);
+  for (let i = path.length - 1; i >= 0; i--) {
+    if (path[i].role === "assistant") return path[i];
+  }
+  return null;
+}

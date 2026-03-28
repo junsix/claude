@@ -61,7 +61,7 @@ export function MessageInput() {
   return (
     <div className="p-4 pb-6">
       <div className="max-w-3xl mx-auto">
-        <div className="rounded-2xl shadow-sm border overflow-hidden" style={{ background: "var(--color-bg-input)", borderColor: "var(--color-border)" }}>
+        <div className="rounded-2xl shadow-sm border" style={{ background: "var(--color-bg-input)", borderColor: "var(--color-border)" }}>
           <textarea
             ref={textareaRef}
             className="w-full bg-transparent px-4 pt-4 pb-2 text-sm resize-none focus:outline-none min-h-[52px] max-h-[200px]"

@@ -1,50 +1,48 @@
-import type { Profile, MemoryEntry, CustomStyle } from "@claude-copy/shared";
+import type { Profile, MemoryEntry, CustomStyle, Project } from "@claude-copy/shared";
+import { assembleSystemPrompt, type AssemblyContext, type FeatureFlags } from "./prompt-modules.js";
 
-interface BuildSystemPromptParams {
+export interface KnowledgeFileContent {
+  name: string;
+  content: string;
+  size: number;
+}
+
+export interface BuildSystemPromptParams {
   profile: Profile;
   memories: MemoryEntry[];
   style: CustomStyle | null;
   projectInstructions: string | null;
-  knowledgeContext: string | null;
+  knowledgeFiles: KnowledgeFileContent[];
+  project?: Project | null;
+  features?: Partial<FeatureFlags>;
+}
+
+// Rough token estimator: ~4 chars/token for Latin, ~2 for CJK
+export function estimateTokens(text: string): number {
+  if (!text) return 0;
+  let cjkCount = 0;
+  for (const char of text) {
+    if (char.charCodeAt(0) > 0x2e80) cjkCount++;
+  }
+  const latinCount = text.length - cjkCount;
+  return Math.ceil(latinCount / 4 + cjkCount / 2);
 }
 
 export function buildSystemPrompt(params: BuildSystemPromptParams): string {
-  const sections: string[] = [];
+  const ctx: AssemblyContext = {
+    profile: params.profile,
+    memories: params.memories,
+    style: params.style,
+    project: params.project ?? null,
+    projectInstructions: params.projectInstructions,
+    knowledgeFiles: params.knowledgeFiles,
+    date: new Date().toISOString().split("T")[0],
+    features: {
+      memory: params.features?.memory ?? true,
+      artifacts: params.features?.artifacts ?? true,
+      localFiles: params.features?.localFiles ?? (params.project?.localPaths?.length ?? 0) > 0,
+    },
+  };
 
-  // 1. Profile & global instructions
-  const profileLines = [
-    `## User Profile`,
-    `Name: ${params.profile.name}`,
-    params.profile.role ? `Role: ${params.profile.role}` : null,
-    params.profile.expertise.length > 0 ? `Expertise: ${params.profile.expertise.join(", ")}` : null,
-    params.profile.language ? `Language: ${params.profile.language}` : null,
-  ].filter(Boolean).join("\n");
-  sections.push(profileLines);
-
-  if (params.profile.globalInstructions) {
-    sections.push(`## Global Instructions\n${params.profile.globalInstructions}`);
-  }
-
-  // 2. Active memories
-  if (params.memories.length > 0) {
-    const memoryLines = params.memories.map((m) => `- ${m.content}`).join("\n");
-    sections.push(`## User Memory\n${memoryLines}`);
-  }
-
-  // 3. Project instructions
-  if (params.projectInstructions) {
-    sections.push(`## Project Instructions\n${params.projectInstructions}`);
-  }
-
-  // 4. Knowledge files
-  if (params.knowledgeContext) {
-    sections.push(`## Project Knowledge\n${params.knowledgeContext}`);
-  }
-
-  // 5. Style
-  if (params.style && params.style.prompt) {
-    sections.push(`## Response Style\n${params.style.prompt}`);
-  }
-
-  return sections.join("\n\n");
+  return assembleSystemPrompt(ctx);
 }

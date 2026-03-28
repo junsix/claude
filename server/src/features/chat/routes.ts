@@ -28,6 +28,7 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
 
       const profile = await profileSvc.getProfile(req.profileId);
       const memories = await settingsStorage.listMemories(req.dataDir);
+      const settings = await settingsStorage.getAppSettings(req.dataDir);
 
       const stream = chatService.sendMessage(
         req.dataDir,
@@ -39,8 +40,7 @@ export function createChatRoutes(chatService: ChatService, convStorage: Conversa
           profile: profile!,
           memories: memories.filter(m => m.active),
           style: null,
-          projectInstructions: null,
-          knowledgeContext: null,
+          settings,
         },
       );
 

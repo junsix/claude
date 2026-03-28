@@ -47,12 +47,13 @@ export function createApp(options: AppOptions): express.Express {
 
   const claudeService = new ClaudeService();
   const convStorage = new ConversationStorage();
+  const projectStorage = new ProjectStorage();
+
   const convManagement = new ConversationManagementService(convStorage);
   profileRouter.use("/conversations", createConversationRoutes(convManagement));
-  const chatService = new ChatService(convStorage, claudeService);
+  const chatService = new ChatService(convStorage, claudeService, projectStorage);
   profileRouter.use("/chat", createChatRoutes(chatService, convStorage, claudeService));
 
-  const projectStorage = new ProjectStorage();
   const projectService = new ProjectService(projectStorage);
   profileRouter.use("/projects", createProjectRoutes(projectService));
 

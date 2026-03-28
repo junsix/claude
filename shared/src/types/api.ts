@@ -12,6 +12,8 @@ export type ChatSSEEvent =
   | { type: "user_saved"; messageId: string }
   | { type: "thinking"; text: string }
   | { type: "assistant_chunk"; text: string }
+  | { type: "tool_use"; toolName: string; toolId: string }
+  | { type: "tool_result"; toolId: string; summary: string }
   | { type: "assistant_done"; messageId: string; artifactIds: string[] }
   | { type: "done"; usage: { inputTokens: number; outputTokens: number; costUsd: number } }
   | { type: "error"; code: string; message: string; retryAfter?: number };
